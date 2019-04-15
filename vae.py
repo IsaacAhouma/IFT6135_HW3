@@ -1,7 +1,7 @@
 import torch.nn as nn
-import torch.functional as F
+import torch.nn.functional as F
 import torch
-
+from torch.autograd import Variable
 
 class VAE(nn.Module):
     def __init__(self, latent_dim=100):
@@ -12,7 +12,6 @@ class VAE(nn.Module):
         self.fc_mean = nn.Linear(in_features=256, out_features=self.latent_dim)
         self.fc_log_variance = nn.Linear(in_features=256, out_features=self.latent_dim)
         self.fc_decoder = nn.Linear(in_features=self.latent_dim, out_features=256)
-        self.upsampling = nn.Upsample(scale_factor=2, mode='bilinear')
 
     def encoder(self, x):
         x = self.pooling(self.elu(nn.Conv2d(1, 32, kernel_size=(3, 3))(x)))
@@ -26,6 +25,7 @@ class VAE(nn.Module):
     def reparameterize(self, mu, log_variance):
         sigma = torch.exp(0.5*log_variance)
         e = torch.zeros(sigma.size(), device=sigma.device).normal_()
+        e = Variable(e)
         z = e.mul(sigma)
         z.add_(mu)
         return z
@@ -34,9 +34,9 @@ class VAE(nn.Module):
         x = self.elu(self.fc_decoder(z))
         x = x.view(-1, 256, 1, 1)
         x = self.elu(nn.Conv2d(256, 64, kernel_size=(5, 5), padding=(4, 4))(x))
-        x = self.upsampling(x)
+        x = F.interpolate(x, scale_factor=2, mode='bilinear')
         x = self.elu(nn.Conv2d(64, 32, kernel_size=(3, 3), padding=(2, 2))(x))
-        x = self.upsampling(x)
+        x = F.interpolate(x, scale_factor=2, mode='bilinear')
         x = self.elu(nn.Conv2d(32, 16, kernel_size=(3, 3), padding=(2, 2))(x))
         x = nn.Conv2d(16, 1, kernel_size=(3, 3), padding=(2, 2))(x)
         return x

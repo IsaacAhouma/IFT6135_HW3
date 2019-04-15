@@ -80,7 +80,7 @@ else:
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 epochs = args.epochs
 
-reconstruction_error = nn.MSELoss(size_average=False)
+# reconstruction_error = nn.MSELoss(size_average=False)
 
 # see Appendix B from VAE paper:
 # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
@@ -88,9 +88,15 @@ reconstruction_error = nn.MSELoss(size_average=False)
 
 
 def loss_fn(x_tilde, x, mu, log_variance):
-    error = F.binary_cross_entropy(x_tilde, x.view(-1, 784), reduction='sum')  # E[log p(x|z)]
+    # reconstruction_error = F.binary_cross_entropy(x_tilde, x.view(-1, 784), reduction='sum')  # E[log p(x|z)]
+    x = x.reshape(x.shape[0], -1)
+    x_tilde = x_tilde.reshape(x_tilde.shape[0], -1)
+    reconstruction_error = (x * torch.log(x_tilde) + (1 - x) * torch.log(1 - x_tilde)).sum(dim=-1)
+    # print('rec err:', reconstruction_error.size())
     D_KL = -0.5 * torch.sum(1 + log_variance - mu.pow(2) - log_variance.exp())
-    ELBO = error - D_KL
+    # print(D_KL.size())
+    ELBO = (reconstruction_error - D_KL).mean()
+    # print(ELBO.size())
     return ELBO
 
 
