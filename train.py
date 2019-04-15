@@ -59,6 +59,7 @@ with open(os.path.join(experiment_path, 'exp_config.txt'), 'w') as f:
 # Set the random seed manually for reproducibility.
 torch.manual_seed(args.seed)
 
+
 # Use the GPU if you have one
 if torch.cuda.is_available():
     print("Using the GPU")
@@ -68,14 +69,11 @@ else:
       of memory. \n You can try setting batch_size=1 to reduce memory usage")
     device = torch.device("cpu")
 
+model = VAE()
+model = model.to(device)
 train_loader, valid_loader, test_loader = get_data_loader("binarized_mnist", 64)
 
-model = VAE()
-if torch.cuda.is_available():
-    model.cuda()
-    device = torch.device("cuda")
-else:
-    device = torch.device("cpu")
+
 
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 epochs = args.epochs
@@ -129,6 +127,8 @@ def test(epoch):
             i = values[0]
             data = values[1]
             data = data.to(device)
+            print(model.device)
+            print(data.device)
             recon_batch, mu, logvar = model(data)
             test_loss += loss_fn(recon_batch, data, mu, logvar).item()
             if i == 0:
