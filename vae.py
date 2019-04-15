@@ -15,9 +15,17 @@ class VAE(nn.Module):
         self.upsampling = nn.Upsample(scale_factor=2, mode='bilinear')
 
     def encoder(self, x):
-        x = self.pooling(self.elu(nn.Conv2d(1, 32, kernel_size=(3, 3))(x)))
-        x = self.pooling(self.elu(nn.Conv2d(32, 64, kernel_size=(3, 3))(x)))
-        x = self.elu(nn.Conv2d(64, 256, kernel_size=(5, 5))(x))
+        encode = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=(3, 3)),
+            nn.ELU(),
+            self.pooling,
+            nn.Conv2d(32, 64, kernel_size=(3, 3)),
+            nn.ELU(),
+            self.pooling,
+            nn.Conv2d(64, 256, kernel_size=(5, 5)),
+            nn.ELU()
+        )
+        x = encode(x)
         mean = self.fc_mean(x)
         log_variance = self.fc_log_variance(x)
         return mean, log_variance
@@ -30,14 +38,20 @@ class VAE(nn.Module):
         return z
 
     def decoder(self, z):
-        x = self.elu(self.fc_decoder(z))
-        x = self.elu(nn.Conv2d(256, 64, kernel_size=(5, 5), padding=(4, 4))(x))
-        x = self.upsampling(x)
-        x = self.elu(nn.Conv2d(64, 32, kernel_size=(3, 3), padding=(2, 2))(x))
-        x = self.upsampling(x)
-        x = self.elu(nn.Conv2d(32, 16, kernel_size=(3, 3), padding=(2, 2))(x))
-        x = nn.Conv2d(16, 1, kernel_size=(3, 3), padding=(2, 2))(x)
-        return x
+        decode = nn.Sequential(
+            self.fc_decoder,
+            nn.ELU(),
+            nn.Conv2d(256, 64, kernel_size=(5, 5), padding=(4, 4)),
+            nn.ELU(),
+            self.upsampling,
+            nn.Conv2d(64, 32, kernel_size=(3, 3), padding=(2, 2)),
+            nn.ELU,
+            self.upsampling,
+            nn.Conv2d(32, 16, kernel_size=(3, 3), padding=(2, 2)),
+            nn.ELU,
+            nn.Conv2d(16, 1, kernel_size=(3, 3), padding=(2, 2))
+        )
+        return decode(z)
 
     def forward(self, x):
         mean, log_variance = self.encoder(x)
