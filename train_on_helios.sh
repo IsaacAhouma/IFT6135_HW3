@@ -5,7 +5,7 @@
 #PBS -l nodes=1:gpus=1
 #PBS -l walltime=10:00:00
 
-export ROOT_DIR=$HOME'/HW3'
+export ROOT_DIR=$HOME'/IFT6135_HW3'
 
 
 s_exec python $ROOT_DIR'/train.py'
