@@ -65,7 +65,8 @@ model = VAE()
 if torch.cuda.is_available():
     print("Using the GPU")
     device = torch.device("cuda")
-    model.cuda()
+    model = model.cuda()
+    model = model.to(device)
 else:
     print("WARNING: You are about to run on cpu, and this will likely run out \
       of memory. \n You can try setting batch_size=1 to reduce memory usage")

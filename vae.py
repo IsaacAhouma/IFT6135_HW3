@@ -15,7 +15,7 @@ class VAE(nn.Module):
 
     def encode(self, x):
         # print(x.device)
-        x = self.pooling(self.elu(nn.Conv2d(1, 32, kernel_size=(3, 3))(x)), device=x.device)
+        x = self.pooling(self.elu(nn.Conv2d(1, 32, kernel_size=(3, 3))(x)))
         x = self.pooling(self.elu(nn.Conv2d(32, 64, kernel_size=(3, 3))(x)))
         x = self.elu(nn.Conv2d(64, 256, kernel_size=(5, 5))(x))
         x = x.view(x.size(0), -1)
