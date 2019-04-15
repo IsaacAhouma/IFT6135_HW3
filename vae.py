@@ -17,22 +17,24 @@ class VAE(nn.Module):
         x = self.pooling(self.elu(nn.Conv2d(1, 32, kernel_size=(3, 3))(x)))
         x = self.pooling(self.elu(nn.Conv2d(32, 64, kernel_size=(3, 3))(x)))
         x = self.elu(nn.Conv2d(64, 256, kernel_size=(5, 5))(x))
-        x = x.view(-1, 256)
+        x = x.view(x.size(0), -1)
         mean = self.fc_mean(x)
         log_variance = self.fc_log_variance(x)
         return mean, log_variance
 
     def reparameterize(self, mu, log_variance):
         sigma = torch.exp(0.5*log_variance)
-        e = torch.zeros(sigma.size()).normal_()
-        e = Variable(e)
+        e = torch.randn_like(log_variance)
+        # e = torch.zeros(sigma.size()).normal_()
+        # e = Variable(e)
         z = e.mul(sigma)
         z.add_(mu)
         return z
 
     def decode(self, z):
         x = self.elu(self.fc_decoder(z))
-        x = x.view(-1, 256, 1, 1)
+        # x = x.view(-1, 256, 1, 1)
+        x = x.unsqueeze(-1).unsqueeze(-1)
         x = self.elu(nn.Conv2d(256, 64, kernel_size=(5, 5), padding=(4, 4))(x))
         x = F.interpolate(x, scale_factor=2, mode='bilinear')
         x = self.elu(nn.Conv2d(64, 32, kernel_size=(3, 3), padding=(2, 2))(x))

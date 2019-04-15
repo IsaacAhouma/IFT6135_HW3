@@ -89,9 +89,12 @@ def loss_fn(x_tilde, x, mu, log_variance):
     x = x.reshape(x.shape[0], -1)
     x_tilde = x_tilde.reshape(x_tilde.shape[0], -1)
     # reconstruction_error = F.binary_cross_entropy(x_tilde, x.view(-1, 784), reduction='sum')  # E[log p(x|z)]
-    reconstruction_error = (x * torch.log(x_tilde) + (1 - x) * torch.log(1 - x_tilde)).sum(dim=-1)
+    reconstruction_error = -(x * torch.log(x_tilde) + (1 - x) * torch.log(1 - x_tilde)).sum(dim=-1)
+    print('reconstruction error:', reconstruction_error)
     D_KL = -0.5 * torch.sum(1 + log_variance - mu.pow(2) - log_variance.exp())
-    ELBO = (reconstruction_error - D_KL).mean()
+    print('KL Divergence:', D_KL)
+    ELBO = -(reconstruction_error - D_KL).mean()
+    print('elbo:', -ELBO)
     return ELBO
 
 
@@ -109,11 +112,11 @@ def train(epoch):
         loss.backward()
         train_loss += loss.item()
         optimizer.step()
-        if batch_idx % 5 == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader),
-                loss.item() / len(data)))
+        # if batch_idx % 5 == 0:
+        #     print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+        #         epoch, batch_idx * len(data), len(train_loader.dataset),
+        #         100. * batch_idx / len(train_loader),
+        #         loss.item() / len(data)))
 
     print('====> Epoch: {} Average loss: {:.4f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
