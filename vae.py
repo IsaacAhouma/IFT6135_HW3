@@ -24,7 +24,7 @@ class VAE(nn.Module):
 
     def reparameterize(self, mu, log_variance):
         sigma = torch.exp(0.5*log_variance)
-        e = torch.zeros(sigma.size(), device=sigma.device).normal_()
+        e = torch.zeros(sigma.size()).normal_()
         e = Variable(e)
         z = e.mul(sigma)
         z.add_(mu)
