@@ -14,6 +14,7 @@ class VAE(nn.Module):
         self.fc_decoder = nn.Linear(in_features=self.latent_dim, out_features=256)
 
     def encode(self, x):
+        print(x.device)
         x = self.pooling(self.elu(nn.Conv2d(1, 32, kernel_size=(3, 3))(x)))
         x = self.pooling(self.elu(nn.Conv2d(32, 64, kernel_size=(3, 3))(x)))
         x = self.elu(nn.Conv2d(64, 256, kernel_size=(5, 5))(x))
