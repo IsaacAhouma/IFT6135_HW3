@@ -185,6 +185,7 @@ def importance_sampling(model, X, Z):
     sigma = torch.exp(logvar * 0.5)
     recon_x = model.decode(Z.view(-1, L))
     recon_x = recon_x.view(M, K, D)
+    x = X
     x = x.unsqueeze(1).expand(M, K, D)
     mu = mu.unsqueeze(1).expand(M, K, D)
     sigma = sigma.unsqueeze(1).expand(M, K, D)
