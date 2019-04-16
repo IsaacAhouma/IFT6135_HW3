@@ -23,13 +23,15 @@ class VAE(nn.Module):
             nn.Conv2d(64, 256, kernel_size=(5, 5)),
             nn.ELU()
         )
-        self.decoding = nn.Sequential(
+        self.decoding_part1 = nn.Sequential(
             nn.Conv2d(256, 64, kernel_size=(5, 5), padding=4),
             nn.ELU(),
-            self.upsampling,
+        )
+        self.decoding_part2 = nn.Sequential(
             nn.Conv2d(64, 32, kernel_size=(3, 3), padding=2),
-            nn.ELU(),
-            self.upsampling,
+            nn.ELU()
+        )
+        self.decoding_part3 = nn.Sequential(
             nn.Conv2d(32, 16, kernel_size=(3, 3), padding=2),
             nn.ELU(),
             nn.Conv2d(16, 1, kernel_size=(3, 3), padding=2)
@@ -52,7 +54,11 @@ class VAE(nn.Module):
     def decode(self, z):
         x = self.elu(self.fc_decoder(z))
         x = x.unsqueeze(-1).unsqueeze(-1)
-        x = self.decoding(x)
+        x = self.decoding_part1(x)
+        x = F.interpolate(x, scale_factor=2, mode='bilinear')
+        x = self.decoding_part2(x)
+        x = F.interpolate(x, scale_factor=2, mode='bilinear')
+        x = self.decoding_part3(x)
         # x = nn.Sigmoid()(x)
         return x
 
