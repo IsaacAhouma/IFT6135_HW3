@@ -190,7 +190,7 @@ def importance_sampling(model, X, Z):
     mu = mu.unsqueeze(1).expand(M, K, L)
     sigma = sigma.unsqueeze(1).expand(M, K, L)
     log_p_x_given_z = -F.binary_cross_entropy_with_logits(recon_x, x, reduction='none').sum(dim=-1)
-    log_p_z = - 0.5 * L * np.log(2 * np.pi) + torch.norm(Z, dim=-1)**2
+    log_p_z = - 0.5 * L * np.log(2 * np.pi) - torch.norm(Z, dim=-1)**2
     log_q_z_given_x = (-0.5 * L * np.log(2 * np.pi)) + (-0.5 * torch.log(sigma**2).sum(dim=-1)) \
                   + (-0.5 * torch.norm((Z - mu) / sigma) ** 2)
     log_p = log_p_x_given_z + log_p_z - log_q_z_given_x
@@ -252,7 +252,7 @@ def generate_z(x, k=200, latent_dim=100, data_name='valid'):
 #     return z
 
 if __name__ == "__main__":
-    for epoch in range(1, args.epochs):
+    for epoch in range(1, 1):
         train(epoch)
         evaluate_elbo()
     # Z_valid = generate_z(model)
