@@ -46,7 +46,7 @@ class VAE(nn.Module):
         x = F.interpolate(x, scale_factor=2, mode='bilinear')
         x = self.elu(nn.Conv2d(32, 16, kernel_size=(3, 3), padding=2)(x))
         x = nn.Conv2d(16, 1, kernel_size=(3, 3), padding=2)(x)
-        x = nn.Sigmoid()(x)
+        # x = nn.Sigmoid()(x)
         return x
 
     def forward(self, x):
