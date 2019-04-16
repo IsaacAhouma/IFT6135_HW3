@@ -143,12 +143,12 @@ def train(epoch):
           epoch, train_elbo / num_minibatches))
 
 
-def evaluate(data='valid'):
+def evaluate(data_name='valid'):
     model.eval()
     elbo = 0
     num_minibatches = 0
 
-    if data == 'test':
+    if data_name == 'test':
         data_loader = test_loader
     else:
         data_loader = valid_loader
@@ -162,7 +162,7 @@ def evaluate(data='valid'):
             elbo += -loss_fn(recon_batch, data, mu, logvar).item()
 
     elbo /= num_minibatches
-    if data == 'test':
+    if data_name == 'test':
         print('====> Test set ELBO: {:.4f}'.format(elbo))
     else:
         print('====> Validation set ELBO: {:.4f}'.format(elbo))
@@ -211,4 +211,4 @@ if __name__ == "__main__":
     Z_test = torch.empty(N_test, 200, 100)
     log_likelihood_test = importance_sampling(model, test_data, Z_test).mean(dim=0)
     print('====> Test set log likelihood: {:.4f}'.format(log_likelihood_test))
-    evaluate(data='test')
+    evaluate(data_name='test')
