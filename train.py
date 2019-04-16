@@ -196,7 +196,7 @@ def importance_sampling(model, X, Z):
     log_p = log_p_x_given_z + log_p_z - log_q_z_given_x
     log_likelihood = np.log(1 / K) + torch.logsumexp(log_p, dim=1)
 
-    return log_likelihood.mean(dim=1)
+    return log_likelihood.mean(dim=0)
 
 def evaluate_importance_sampling(data_name='valid'):
     model.eval()
