@@ -215,7 +215,7 @@ def evaluate_importance_sampling(data_name='valid'):
             z = generate_z(data)
             x = data.view(data.size(0), -1)
             print(importance_sampling(model, x, z).item())
-            log_likelihood += importance_sampling(model, x, z).item()
+            log_likelihood += importance_sampling(model, x, z).mean(dim=0)
 
     log_likelihood /= num_minibatches
     if data_name == 'test':
