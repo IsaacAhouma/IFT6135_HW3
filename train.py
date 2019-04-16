@@ -73,8 +73,6 @@ else:
 train_loader, valid_loader, test_loader = get_data_loader("binarized_mnist", 64)
 
 model = model.to(device)
-print("MODEL SENT TO DEVICE")
-print(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 epochs = args.epochs
@@ -103,7 +101,7 @@ def loss_fn(x_tilde, x, mu, log_variance):
 
 
 ########################
-def train(epoch):
+def train_elbo(epoch):
     model.train()
     train_elbo = 0
     num_minibatches = 0
@@ -126,11 +124,11 @@ def train(epoch):
 
     # print('====> Epoch: {} Average loss: {:.4f}'.format(
     #       epoch, train_loss / len(train_loader.dataset)))
-    print('====> Epoch: {} ELBO: {:.4f}'.format(
+    print('====> Epoch: {} TRAINING ELBO: {:.4f}'.format(
           epoch, train_elbo / num_minibatches))
 
 
-def test(epoch):
+def valid_elbo(epoch):
     model.eval()
     test_elbo = 0
     num_minibatches = 0
@@ -152,16 +150,12 @@ def test(epoch):
     # test_loss /= len(valid_loader.dataset)
     # print('====> Test set loss: {:.4f}'.format(test_loss))
     test_elbo /= num_minibatches
-    print('EPOCH:', epoch)
-    print('====> Test set ELBO: {:.4f}'.format(test_elbo))
+    print('====> Epoch: {} VALIDATION ELBO: {:.4f}'.format(
+          epoch, test_elbo / num_minibatches))
+
 
 if __name__ == "__main__":
     for epoch in range(1, args.epochs + 1):
-        train(epoch)
-        test(epoch)
-        # with torch.no_grad():
-        #     sample = torch.randn(64, 20).to(device)
-        #     sample = model.decode(sample).cpu()
-        #     save_image(sample.view(64, 1, 28, 28),
-        #                'results/sample_' + str(epoch) + '.png')
+        train_elbo(epoch)
+        valid_elbo(epoch)
 
