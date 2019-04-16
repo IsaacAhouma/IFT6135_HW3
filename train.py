@@ -73,7 +73,6 @@ def get_data_loader(dataset_location, batch_size):
         utils.download_url(URL + filename, dataset_location)
         with open(filepath) as f:
             lines = f.readlines()
-        #f.close()
         x = lines_to_np_array(lines).astype('float32')
         x = x.reshape(x.shape[0], 1, 28, 28)
         y = np.zeros((x.shape[0], 1)).astype('float32')
@@ -130,7 +129,6 @@ def train(epoch):
     num_minibatches = 0
     for batch_idx, (data, _) in enumerate(train_loader):
         num_minibatches += 1
-        # data = values[1]
         data = data.to(device)
         optimizer.zero_grad()
         recon_batch, mu, logvar = model(data)
@@ -156,7 +154,6 @@ def evaluate_elbo(data_name='valid'):
     with torch.no_grad():
         for batch_idx, (data, _) in enumerate(data_loader):
             num_minibatches += 1
-            # data = values[1]
             data = data.to(device)
             recon_batch, mu, logvar = model(data)
             elbo += -loss_fn(recon_batch, data, mu, logvar).item()
@@ -198,6 +195,7 @@ def importance_sampling(model, X, Z):
 
     return log_likelihood
 
+
 def evaluate_importance_sampling(data_name='valid'):
     model.eval()
     log_likelihood = 0
@@ -223,11 +221,9 @@ def evaluate_importance_sampling(data_name='valid'):
         print('====> Validation set Log-Likelihood: {:.4f}'.format(log_likelihood))
 
 
-def generate_z(x, k=200, latent_dim=100, data_name='valid'):
+def generate_z(x, k=200, latent_dim=100):
     K = k
     (M, C, H, W) = x.size()
-    D = H * W
-    # z = torch.empty(M, k, latent_dim)
     mu, logvar = model.encode(x)
     mu = mu.unsqueeze(1).expand(M, K, latent_dim)
     logvar = logvar.unsqueeze(1).expand(M, K, latent_dim)
@@ -235,34 +231,14 @@ def generate_z(x, k=200, latent_dim=100, data_name='valid'):
 
     return z
 
-# def generate_z(_model, k=200, latent_dim=100, data_name='valid'):
-#     if data_name == 'test':
-#         data = test_data
-#     else:
-#         data = valid_data
-#
-#     (N, _, _, _) = data.size()
-#     z = torch.empty(N, k, latent_dim)
-#     for j in range(N):
-#         mu, logvar = _model.encode(data[j].view(1, -1))
-#         mu = mu.unsqueeze(-1).expand(200)
-#         logvar = logvar.unsqueeze(-1).expand(200)
-#         z[j] = _model.reparameterize(mu, logvar)
-#
-#     return z
 
 if __name__ == "__main__":
     for epoch in range(1, args.epochs):
         train(epoch)
         evaluate_elbo()
-    # Z_valid = generate_z(model)
-    # log_likelihood_valid = importance_sampling(model, valid_data.view(-1, 784), Z_valid).mean(dim=0)
-    # print('====> Valid set log likelihood: {:.4f}'.format(log_likelihood_valid))
+
     evaluate_importance_sampling()
     evaluate_elbo()
 
-    # Z_test = generate_z(model, data_name='test')
-    # log_likelihood_test = importance_sampling(model, test_data.view(-1, 784), Z_test).mean(dim=0)
-    # print('====> Test set log likelihood: {:.4f}'.format(log_likelihood_test))
     evaluate_importance_sampling(data_name='test')
     evaluate_elbo(data_name='test')
