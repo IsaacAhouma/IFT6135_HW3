@@ -14,7 +14,7 @@ parser.add_argument('--lr', type=float, default=0.0003,
                     help='initial learning rate')
 parser.add_argument('--epochs', type=int, default=20,
                     help='number of epochs')
-parser.add_argument('--batch_size', type=int, default=64,
+parser.add_argument('--batch_size', type=int, default=4,
                     help='size of one minibatch')
 parser.add_argument('--seed', type=int, default=1111,
                     help='random seed')
@@ -84,7 +84,7 @@ def get_data_loader(dataset_location, batch_size):
     return splitdata, data
 
 
-(train_loader, valid_loader, test_loader), (train_data, valid_data, test_data) = get_data_loader("binarized_mnist", 64)
+(train_loader, valid_loader, test_loader), (train_data, valid_data, test_data) = get_data_loader("binarized_mnist", args.batch_size)
 
 #### MODEL ####
 
@@ -187,7 +187,7 @@ def importance_sampling(model, X, Z):
     mu = mu.unsqueeze(1).expand(M, K, L)
     sigma = sigma.unsqueeze(1).expand(M, K, L)
     log_p_x_given_z = -F.binary_cross_entropy_with_logits(recon_x, x, reduction='none').sum(dim=-1)
-    log_p_z = - 0.5 * L * np.log(2 * np.pi) - torch.norm(Z, dim=-1)**2
+    log_p_z = - 0.5 * L * np.log(2 * np.pi) - 0.5 * torch.norm(Z, dim=-1)**2
     log_q_z_given_x = (-0.5 * L * np.log(2 * np.pi)) + (-0.5 * torch.log(sigma**2).sum(dim=-1)) \
                   + (-0.5 * torch.norm((Z - mu) / sigma, dim=-1)**2)
     log_p = log_p_x_given_z + log_p_z - log_q_z_given_x
@@ -233,7 +233,7 @@ def generate_z(x, k=200, latent_dim=100):
 
 
 if __name__ == "__main__":
-    for epoch in range(1, args.epochs):
+    for epoch in range(1, 2):
         train(epoch)
         evaluate_elbo()
 
