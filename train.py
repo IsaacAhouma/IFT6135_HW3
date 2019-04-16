@@ -66,52 +66,26 @@ def get_data_loader(dataset_location, batch_size):
     def lines_to_np_array(lines):
         return np.array([[int(i) for i in line.split()] for line in lines])
     splitdata = []
-    splitname = "train"
-    filename = "binarized_mnist_%s.amat" % splitname
-    filepath = os.path.join(dataset_location, filename)
-    utils.download_url(URL + filename, dataset_location)
-    with open(filepath) as f:
-        lines = f.readlines()
-    # f.close()
-    x = lines_to_np_array(lines).astype('float32')
-    x = x.reshape(x.shape[0], 1, 28, 28)
-    y = np.zeros((x.shape[0], 1)).astype('float32')
-    # pytorch data loader
-    dataset = data_utils.TensorDataset(torch.from_numpy(x), torch.from_numpy(y))
-    dataset_loader = data_utils.DataLoader(dataset, batch_size=batch_size, shuffle=splitname == "train")
-    splitdata.append(dataset_loader)
-    splitname = "valid"
-    filename = "binarized_mnist_%s.amat" % splitname
-    filepath = os.path.join(dataset_location, filename)
-    utils.download_url(URL + filename, dataset_location)
-    with open(filepath) as f:
-        lines = f.readlines()
-    # f.close()
-    x = lines_to_np_array(lines).astype('float32')
-    x = x.reshape(x.shape[0], 1, 28, 28)
-    y = np.zeros((x.shape[0], 1)).astype('float32')
-    # pytorch data loader
-    dataset = data_utils.TensorDataset(torch.from_numpy(x), torch.from_numpy(y))
-    dataset_loader = data_utils.DataLoader(dataset, batch_size=batch_size, shuffle=splitname == "train")
-    splitdata.append(dataset_loader)
-    splitname = "test"
-    filename = "binarized_mnist_%s.amat" % splitname
-    filepath = os.path.join(dataset_location, filename)
-    utils.download_url(URL + filename, dataset_location)
-    with open(filepath) as f:
-        lines = f.readlines()
-    # f.close()
-    x = lines_to_np_array(lines).astype('float32')
-    x = x.reshape(x.shape[0], 1, 28, 28)
-    y = np.zeros((x.shape[0], 1)).astype('float32')
-    # pytorch data loader
-    dataset = data_utils.TensorDataset(torch.from_numpy(x), torch.from_numpy(y))
-    dataset_loader = data_utils.DataLoader(dataset, batch_size=batch_size, shuffle=splitname == "train")
-    splitdata.append(dataset_loader)
-    return splitdata
+    data = []
+    for splitname in ["train", "valid", "test"]:
+        filename = "binarized_mnist_%s.amat" % splitname
+        filepath = os.path.join(dataset_location, filename)
+        utils.download_url(URL + filename, dataset_location)
+        with open(filepath) as f:
+            lines = f.readlines()
+        #f.close()
+        x = lines_to_np_array(lines).astype('float32')
+        x = x.reshape(x.shape[0], 1, 28, 28)
+        y = np.zeros((x.shape[0], 1)).astype('float32')
+        # pytorch data loader
+        data.append(torch.from_numpy(x))
+        dataset = data_utils.TensorDataset(torch.from_numpy(x), torch.from_numpy(y))
+        dataset_loader = data_utils.DataLoader(dataset, batch_size=batch_size, shuffle=splitname == "train")
+        splitdata.append(dataset_loader)
+    return splitdata, data
 
 
-train_loader, valid_loader, test_loader = get_data_loader("binarized_mnist", 64)
+(train_loader, valid_loader, test_loader), (train_data, valid_data, test_data) = get_data_loader("binarized_mnist", 64)
 
 #### MODEL ####
 
@@ -169,20 +143,29 @@ def train(epoch):
           epoch, train_elbo / num_minibatches))
 
 
-def valid():
+def evaluate(data='valid'):
     model.eval()
-    valid_elbo = 0
+    elbo = 0
     num_minibatches = 0
+
+    if data == 'test':
+        data_loader = test_loader
+    else:
+        data_loader = valid_loader
+
     with torch.no_grad():
-        for batch_idx, (data, _) in enumerate(valid_loader):
+        for batch_idx, (data, _) in enumerate(data_loader):
             num_minibatches += 1
             # data = values[1]
             data = data.to(device)
             recon_batch, mu, logvar = model(data)
-            valid_elbo += -loss_fn(recon_batch, data, mu, logvar).item()
+            elbo += -loss_fn(recon_batch, data, mu, logvar).item()
 
-    valid_elbo /= num_minibatches
-    print('====> Validation set ELBO: {:.4f}'.format(valid_elbo))
+    elbo /= num_minibatches
+    if data == 'test':
+        print('====> Test set ELBO: {:.4f}'.format(elbo))
+    else:
+        print('====> Validation set ELBO: {:.4f}'.format(elbo))
 
 
 def importance_sampling(model, X, Z):
@@ -192,16 +175,40 @@ def importance_sampling(model, X, Z):
     :param Z: a tensor of shape (M, K, L)
     :return: a vector of length M
     """
+    X = X.to(device)
+    Z = Z.to(device)
     M, D = X.size()
     _, K, L = Z.size()
     x = X.view(M, 1, 28, 28)
+    mu, logvar = model.encode(x)
+    sigma = torch.exp(logvar * 0.5)
     recon_x = model.decode(Z.view(-1, L))
     recon_x = recon_x.view(M, K, D)
+    x = x.unsqueeze(1).expand(M, K, D)
+    mu = mu.unsqueeze(1).expand(M, K, D)
+    sigma = sigma.unsqueeze(1).expand(M, K, D)
+    log_p_x_given_z = -F.binary_cross_entropy_with_logits(recon_x, x, reduction='none').sum(dim=-1)
+    log_p_z = - 0.5 * L * np.log(2 * np.pi) + torch.norm(Z, dim=-1)**2
+    log_q_z_given_x = (-0.5 * L * np.log(2 * np.pi)) + (-0.5 * torch.log(sigma**2).sum(dim=-1)) \
+                  + (-0.5 * torch.norm((x - mu) / sigma) ** 2)
+    log_p = log_p_x_given_z + log_p_z - log_q_z_given_x
+    log_likelihood = np.log(1 / K) + torch.logsumexp(log_p, dim=1)
 
-
-
+    return log_likelihood
 
 if __name__ == "__main__":
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(1, 2):
         train(epoch)
-        valid()
+        evaluate()
+
+    (N_valid, ) = valid_data.size()
+    Z_valid = torch.empty(N_valid, 200, 100)
+    log_likelihood_valid = importance_sampling(model, valid_data, Z_valid).mean(dim=0)
+    print('====> Valid set log likelihood: {:.4f}'.format(log_likelihood_valid))
+    evaluate()
+
+    (N_test, ) = test_data.size()
+    Z_test = torch.empty(N_test, 200, 100)
+    log_likelihood_test = importance_sampling(model, test_data, Z_test).mean(dim=0)
+    print('====> Test set log likelihood: {:.4f}'.format(log_likelihood_test))
+    evaluate(data='test')
