@@ -12,7 +12,7 @@ from vae import VAE
 parser = argparse.ArgumentParser(description='VAE')
 parser.add_argument('--lr', type=float, default=0.0003,
                     help='initial learning rate')
-parser.add_argument('--epochs', type=int, default=5,
+parser.add_argument('--epochs', type=int, default=1,
                     help='number of epochs')
 parser.add_argument('--batch_size', type=int, default=64,
                     help='size of one minibatch')
@@ -179,11 +179,8 @@ def valid_elbo(epoch):
     print('====> Validation set ELBO: {:.4f}'.format(test_elbo))
 
 
-for epoch in range(1, args.epochs + 1):
-    train_elbo(epoch)
-    valid_elbo(epoch)
-# if __name__ == "__main__":
-#     for epoch in range(1, args.epochs + 1):
-#         train_elbo(epoch)
-#         valid_elbo(epoch)
+if __name__ == "__main__":
+    for epoch in range(1, args.epochs + 1):
+        train_elbo(epoch)
+        valid_elbo(epoch)
 
