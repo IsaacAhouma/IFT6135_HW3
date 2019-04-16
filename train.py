@@ -147,7 +147,7 @@ def valid_elbo(epoch):
     print('====> Validation set ELBO: {:.4f}'.format(test_elbo))
 
 
-for epoch in range(1, args.epochs + 1):
+for epoch in range(1, 5):
     train_elbo(epoch)
     valid_elbo(epoch)
 # if __name__ == "__main__":
