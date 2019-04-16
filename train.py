@@ -143,7 +143,7 @@ def train(epoch):
           epoch, train_elbo / num_minibatches))
 
 
-def evaluate(data_name='valid'):
+def evaluate_elbo(data_name='valid'):
     model.eval()
     elbo = 0
     num_minibatches = 0
@@ -175,6 +175,7 @@ def importance_sampling(model, X, Z):
     :param Z: a tensor of shape (M, K, L)
     :return: a vector of length M
     """
+    model.eval()
     X = X.to(device)
     Z = Z.to(device)
     (M, D) = X.size()
@@ -194,26 +195,73 @@ def importance_sampling(model, X, Z):
     log_p = log_p_x_given_z + log_p_z - log_q_z_given_x
     log_likelihood = np.log(1 / K) + torch.logsumexp(log_p, dim=1)
 
-    return log_likelihood
+    return log_likelihood.mean(dim=1)
+
+def evaluate_importance_sampling(data_name='valid'):
+    model.eval()
+    log_likelihood = 0
+    num_minibatches = 0
+
+    if data_name == 'test':
+        data_loader = test_loader
+    else:
+        data_loader = valid_loader
+
+    with torch.no_grad():
+        for batch_idx, (data, _) in enumerate(data_loader):
+            num_minibatches += 1
+            data = data.to(device)
+            z = generate_z(data)
+            x = data.view(data.size(0), -1)
+            log_likelihood += importance_sampling(model, x, z).item()
+
+    log_likelihood /= num_minibatches
+    if data_name == 'test':
+        print('====> Test set Log-Likelihood: {:.4f}'.format(log_likelihood))
+    else:
+        print('====> Validation set Log-Likelihood: {:.4f}'.format(log_likelihood))
+
+
+def generate_z(x, k=200, latent_dim=100, data_name='valid'):
+    K = k
+    (M, C, H, W) = x.size()
+    D = H * W
+    # z = torch.empty(M, k, latent_dim)
+    mu, logvar = model.encode(x)
+    mu = mu.unsqueeze(1).expand(M, K, latent_dim)
+    logvar = logvar.unsqueeze(1).expand(M, K, latent_dim)
+    z = model.reparameterize(mu, logvar)
+
+    return z
+
+# def generate_z(_model, k=200, latent_dim=100, data_name='valid'):
+#     if data_name == 'test':
+#         data = test_data
+#     else:
+#         data = valid_data
+#
+#     (N, _, _, _) = data.size()
+#     z = torch.empty(N, k, latent_dim)
+#     for j in range(N):
+#         mu, logvar = _model.encode(data[j].view(1, -1))
+#         mu = mu.unsqueeze(-1).expand(200)
+#         logvar = logvar.unsqueeze(-1).expand(200)
+#         z[j] = _model.reparameterize(mu, logvar)
+#
+#     return z
 
 if __name__ == "__main__":
     # for epoch in range(1, 2):
     #     train(epoch)
     #     evaluate()
-    print(valid_data.view(-1, 784).size())
-    (N_valid, _, _, _) = valid_data.size()
-    Z_valid = torch.empty(N_valid, 200, 100)
-    for i in range(N_valid):
-        mu, logvar = model.encode(valid_data[i])
-        mu = mu.unsqueeze(-1).expand(200)
-        logvar = logvar.unsqueeze(-1).expand(200)
-        Z_valid[i] = model.reparameterize(mu, logvar)
-    log_likelihood_valid = importance_sampling(model, valid_data.view(-1, 784), Z_valid).mean(dim=0)
-    print('====> Valid set log likelihood: {:.4f}'.format(log_likelihood_valid))
-    evaluate()
+    # Z_valid = generate_z(model)
+    # log_likelihood_valid = importance_sampling(model, valid_data.view(-1, 784), Z_valid).mean(dim=0)
+    # print('====> Valid set log likelihood: {:.4f}'.format(log_likelihood_valid))
+    evaluate_importance_sampling()
+    evaluate_elbo()
 
-    (N_test, _, _, _) = test_data.size()
-    Z_test = torch.empty(N_test, 200, 100)
-    log_likelihood_test = importance_sampling(model, test_data.view(-1, 784), Z_test).mean(dim=0)
-    print('====> Test set log likelihood: {:.4f}'.format(log_likelihood_test))
-    evaluate(data_name='test')
+    # Z_test = generate_z(model, data_name='test')
+    # log_likelihood_test = importance_sampling(model, test_data.view(-1, 784), Z_test).mean(dim=0)
+    # print('====> Test set log likelihood: {:.4f}'.format(log_likelihood_test))
+    evaluate_importance_sampling(data_name='test')
+    evaluate_elbo(data_name='test')
