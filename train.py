@@ -66,7 +66,7 @@ if torch.cuda.is_available():
     print("Using the GPU")
     device = torch.device("cuda")
     # model = model.cuda()
-    model = model.to(device)
+    # model = model.to(device)
 else:
     print("WARNING: You are about to run on cpu, and this will likely run out \
       of memory. \n You can try setting batch_size=1 to reduce memory usage")
@@ -110,6 +110,7 @@ def train(epoch):
         batch_idx = values[0]
         data = values[1]
         data = data.to(device)
+        print('DEVICE')
         print(data.device)
         optimizer.zero_grad()
         recon_batch, mu, logvar = model(data)
