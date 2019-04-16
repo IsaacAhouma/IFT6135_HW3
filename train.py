@@ -200,14 +200,14 @@ if __name__ == "__main__":
     for epoch in range(1, 2):
         train(epoch)
         evaluate()
-
-    (N_valid, ) = valid_data.size()
+    # print(valid_data.size())
+    (N_valid, _, _, _) = valid_data.size()
     Z_valid = torch.empty(N_valid, 200, 100)
     log_likelihood_valid = importance_sampling(model, valid_data, Z_valid).mean(dim=0)
     print('====> Valid set log likelihood: {:.4f}'.format(log_likelihood_valid))
     evaluate()
 
-    (N_test, ) = test_data.size()
+    (N_test, _, _, _) = test_data.size()
     Z_test = torch.empty(N_test, 200, 100)
     log_likelihood_test = importance_sampling(model, test_data, Z_test).mean(dim=0)
     print('====> Test set log likelihood: {:.4f}'.format(log_likelihood_test))
