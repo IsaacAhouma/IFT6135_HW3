@@ -177,8 +177,8 @@ def importance_sampling(model, X, Z):
     """
     X = X.to(device)
     Z = Z.to(device)
-    M, D = X.size()
-    _, K, L = Z.size()
+    (M, D) = X.size()
+    (_, K, L) = Z.size()
     x = X.view(M, 1, 28, 28)
     mu, logvar = model.encode(x)
     sigma = torch.exp(logvar * 0.5)
@@ -197,12 +197,17 @@ def importance_sampling(model, X, Z):
     return log_likelihood
 
 if __name__ == "__main__":
-    for epoch in range(1, 2):
-        train(epoch)
-        evaluate()
-    # print(valid_data.size())
+    # for epoch in range(1, 2):
+    #     train(epoch)
+    #     evaluate()
+    print(valid_data.view(-1, 784).size())
     (N_valid, _, _, _) = valid_data.size()
     Z_valid = torch.empty(N_valid, 200, 100)
+    for i in range(N_valid):
+        mu, logvar = model.encode(valid_data[i])
+        mu = mu.unsqueeze(-1).expand(200)
+        logvar = logvar.unsqueeze(-1).expand(200)
+        Z_valid[i] = model.reparameterize(mu, logvar)
     log_likelihood_valid = importance_sampling(model, valid_data.view(-1, 784), Z_valid).mean(dim=0)
     print('====> Valid set log likelihood: {:.4f}'.format(log_likelihood_valid))
     evaluate()
