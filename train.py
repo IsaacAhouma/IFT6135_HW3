@@ -233,7 +233,7 @@ def generate_z(x, k=200, latent_dim=100):
 
 
 if __name__ == "__main__":
-    for epoch in range(1, 2):
+    for epoch in range(1, args.epochs):
         train(epoch)
         evaluate_elbo()
 
