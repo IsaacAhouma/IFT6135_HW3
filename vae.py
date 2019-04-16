@@ -24,7 +24,7 @@ class VAE(nn.Module):
         )
         self.decoding_part1 = nn.Sequential(
             nn.Conv2d(256, 64, kernel_size=(5, 5), padding=4),
-            nn.ELU(),
+            nn.ELU()
         )
         self.decoding_part2 = nn.Sequential(
             nn.Conv2d(64, 32, kernel_size=(3, 3), padding=2),
