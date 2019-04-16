@@ -187,8 +187,8 @@ def importance_sampling(model, X, Z):
     recon_x = recon_x.view(M, K, D)
     x = X
     x = x.unsqueeze(1).expand(M, K, D)
-    mu = mu.unsqueeze(1).expand(M, K, D)
-    sigma = sigma.unsqueeze(1).expand(M, K, D)
+    mu = mu.unsqueeze(1).expand(M, K, L)
+    sigma = sigma.unsqueeze(1).expand(M, K, L)
     log_p_x_given_z = -F.binary_cross_entropy_with_logits(recon_x, x, reduction='none').sum(dim=-1)
     log_p_z = - 0.5 * L * np.log(2 * np.pi) + torch.norm(Z, dim=-1)**2
     log_q_z_given_x = (-0.5 * L * np.log(2 * np.pi)) + (-0.5 * torch.log(sigma**2).sum(dim=-1)) \
