@@ -41,8 +41,9 @@ class VAE(nn.Module):
         mean = self.fc_mean(x)
         log_variance = self.fc_log_variance(x)
         return mean, log_variance
+
     def reparameterize(self, mu, log_variance):
-        sigma = torch.exp(0.5*log_variance)
+        sigma = torch.exp(0.5 * log_variance)
         e = torch.randn_like(log_variance)
         z = e.mul(sigma)
         z.add_(mu)

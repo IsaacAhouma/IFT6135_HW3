@@ -72,12 +72,12 @@ def get_data_loader(dataset_location, batch_size):
         utils.download_url(URL + filename, dataset_location)
         with open(filepath) as f:
             lines = f.readlines()
-        f.close()
+        #f.close()
         x = lines_to_np_array(lines).astype('float32')
         x = x.reshape(x.shape[0], 1, 28, 28)
         # pytorch data loader
-        # dataset = data_utils.TensorDataset(torch.from_numpy(x))
-        dataset_loader = data_utils.DataLoader(x, batch_size=batch_size, shuffle=splitname == "train")
+        dataset = data_utils.TensorDataset(torch.from_numpy(x))
+        dataset_loader = data_utils.DataLoader(dataset, batch_size=batch_size, shuffle=splitname == "train")
         splitdata.append(dataset_loader)
     return splitdata
 
@@ -163,6 +163,15 @@ def importance_sampling(model, X, Z):
     :param Z: a tensor of shape (M, K, L)
     :return: a vector of length M
     """
+    M, D = X.size()
+    _, K, L = Z.size()
+    x = X.view(M, 1, 28, 28)
+    # z_i = model.decode(Z.view(-1, L))
+    # z_i = z_i.view(M, -1)
+    recon_x = model.decode(Z.view(-1, L))
+    recon_x = recon_x.view(M, K, D)
+
+
 
 
 if __name__ == "__main__":
