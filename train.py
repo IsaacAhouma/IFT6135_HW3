@@ -83,6 +83,7 @@ epochs = args.epochs
 # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
 # https://arxiv.org/abs/1312.6114
 
+os.mkdir('/results')
 
 def loss_fn(x_tilde, x, mu, log_variance):
     x = x.reshape(x.shape[0], -1)
