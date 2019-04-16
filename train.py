@@ -75,7 +75,7 @@ def get_data_loader(dataset_location, batch_size):
         x = lines_to_np_array(lines).astype('float32')
         x = x.reshape(x.shape[0], 1, 28, 28)
         # pytorch data loader
-        dataset = data_utils.TensorDataset(torch.from_numpy(x))
+        # dataset = data_utils.TensorDataset(torch.from_numpy(x))
         dataset_loader = data_utils.DataLoader(x, batch_size=batch_size, shuffle=splitname == "train")
         splitdata.append(dataset_loader)
     return splitdata
