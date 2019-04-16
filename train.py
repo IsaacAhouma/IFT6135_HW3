@@ -14,7 +14,7 @@ parser.add_argument('--lr', type=float, default=0.0003,
                     help='initial learning rate')
 parser.add_argument('--epochs', type=int, default=20,
                     help='number of epochs')
-parser.add_argument('--batch_size', type=int, default=4,
+parser.add_argument('--batch_size', type=int, default=64,
                     help='size of one minibatch')
 parser.add_argument('--seed', type=int, default=1111,
                     help='random seed')
