@@ -75,8 +75,9 @@ def get_data_loader(dataset_location, batch_size):
         #f.close()
         x = lines_to_np_array(lines).astype('float32')
         x = x.reshape(x.shape[0], 1, 28, 28)
+        y = np.zeros((x.shape[0], 1)).astype('float32')
         # pytorch data loader
-        dataset = data_utils.TensorDataset(torch.from_numpy(x))
+        dataset = data_utils.TensorDataset(torch.from_numpy(x), torch.from_numpy(y))
         dataset_loader = data_utils.DataLoader(dataset, batch_size=batch_size, shuffle=splitname == "train")
         splitdata.append(dataset_loader)
     return splitdata
@@ -102,8 +103,8 @@ model = model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 epochs = args.epochs
 
-if not os.path.isdir('/results'):
-    os.mkdir('/results')
+if not os.path.isdir('results'):
+    os.mkdir('results')
 
 # Training ###########
 
@@ -125,9 +126,9 @@ def train(epoch):
     model.train()
     train_elbo = 0
     num_minibatches = 0
-    for values in enumerate(train_loader):
+    for batch_idx, (data, _) in enumerate(train_loader):
         num_minibatches += 1
-        data = values[1]
+        # data = values[1]
         data = data.to(device)
         optimizer.zero_grad()
         recon_batch, mu, logvar = model(data)
@@ -145,9 +146,9 @@ def valid():
     valid_elbo = 0
     num_minibatches = 0
     with torch.no_grad():
-        for values in enumerate(valid_loader):
+        for batch_idx, (data, _) in enumerate(valid_loader):
             num_minibatches += 1
-            data = values[1]
+            # data = values[1]
             data = data.to(device)
             recon_batch, mu, logvar = model(data)
             valid_elbo += -loss_fn(recon_batch, data, mu, logvar).item()
@@ -166,8 +167,6 @@ def importance_sampling(model, X, Z):
     M, D = X.size()
     _, K, L = Z.size()
     x = X.view(M, 1, 28, 28)
-    # z_i = model.decode(Z.view(-1, L))
-    # z_i = z_i.view(M, -1)
     recon_x = model.decode(Z.view(-1, L))
     recon_x = recon_x.view(M, K, D)
 
