@@ -251,9 +251,9 @@ def generate_z(x, k=200, latent_dim=100, data_name='valid'):
 #     return z
 
 if __name__ == "__main__":
-    # for epoch in range(1, 2):
-    #     train(epoch)
-    #     evaluate()
+    for epoch in range(1, 2):
+        train(epoch)
+        evaluate_elbo()
     # Z_valid = generate_z(model)
     # log_likelihood_valid = importance_sampling(model, valid_data.view(-1, 784), Z_valid).mean(dim=0)
     # print('====> Valid set log likelihood: {:.4f}'.format(log_likelihood_valid))
