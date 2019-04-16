@@ -107,9 +107,10 @@ def train(epoch):
     model.train()
     train_loss = 0
     for values in enumerate(train_loader):
+        values = values.to(device)
         batch_idx = values[0]
         data = values[1]
-        data = data.to(device)
+        # data = data.to(device)
         print('DEVICE')
         print(data.device)
         optimizer.zero_grad()
