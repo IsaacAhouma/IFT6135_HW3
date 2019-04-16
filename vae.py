@@ -12,9 +12,7 @@ class VAE(nn.Module):
         self.fc_mean = nn.Linear(in_features=256, out_features=self.latent_dim)
         self.fc_log_variance = nn.Linear(in_features=256, out_features=self.latent_dim)
         self.fc_decoder = nn.Linear(in_features=self.latent_dim, out_features=256)
-
-    def encode(self, x):
-        encoding = nn.Sequential(
+        self.encoding = nn.Sequential(
             nn.Conv2d(1, 32, kernel_size=(3, 3)),
             nn.ELU(),
             nn.AvgPool2d(kernel_size=2, stride=2),
@@ -24,7 +22,9 @@ class VAE(nn.Module):
             nn.Conv2d(64, 256, kernel_size=(5, 5)),
             nn.ELU()
         )
-        x = encoding(x)
+
+    def encode(self, x):
+        x = self.encoding(x)
         x = x.view(x.size(0), -1)
         mean = self.fc_mean(x)
         log_variance = self.fc_log_variance(x)
