@@ -12,6 +12,7 @@ class VAE(nn.Module):
         self.fc_mean = nn.Linear(in_features=256, out_features=self.latent_dim)
         self.fc_log_variance = nn.Linear(in_features=256, out_features=self.latent_dim)
         self.fc_decoder = nn.Linear(in_features=self.latent_dim, out_features=256)
+        self.upsampling = F.interpolate(scale_factor=2, mode='bilinear')
         self.encoding = nn.Sequential(
             nn.Conv2d(1, 32, kernel_size=(3, 3)),
             nn.ELU(),
@@ -21,6 +22,17 @@ class VAE(nn.Module):
             nn.AvgPool2d(kernel_size=2, stride=2),
             nn.Conv2d(64, 256, kernel_size=(5, 5)),
             nn.ELU()
+        )
+        self.decoding = nn.Sequential(
+            nn.Conv2d(256, 64, kernel_size=(5, 5), padding=4),
+            nn.ELU(),
+            self.upsampling,
+            nn.Conv2d(64, 32, kernel_size=(3, 3), padding=2),
+            nn.ELU(),
+            self.upsampling,
+            nn.Conv2d(32, 16, kernel_size=(3, 3), padding=2),
+            nn.ELU(),
+            nn.Conv2d(16, 1, kernel_size=(3, 3), padding=2)
         )
 
     def encode(self, x):
@@ -40,12 +52,7 @@ class VAE(nn.Module):
     def decode(self, z):
         x = self.elu(self.fc_decoder(z))
         x = x.unsqueeze(-1).unsqueeze(-1)
-        x = self.elu(nn.Conv2d(256, 64, kernel_size=(5, 5), padding=4)(x))
-        x = F.interpolate(x, scale_factor=2, mode='bilinear')
-        x = self.elu(nn.Conv2d(64, 32, kernel_size=(3, 3), padding=2)(x))
-        x = F.interpolate(x, scale_factor=2, mode='bilinear')
-        x = self.elu(nn.Conv2d(32, 16, kernel_size=(3, 3), padding=2)(x))
-        x = nn.Conv2d(16, 1, kernel_size=(3, 3), padding=2)(x)
+        x = self.decoding(x)
         # x = nn.Sigmoid()(x)
         return x
 
