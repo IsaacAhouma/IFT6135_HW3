@@ -97,7 +97,7 @@ def loss_fn(x_tilde, x, mu, log_variance):
     D_KL = -0.5 * (1 + log_variance - mu.pow(2) - log_variance.exp()).sum(dim=-1)
     # print('KL Divergence:', D_KL)
     ELBO = (reconstruction_error - D_KL).mean()
-    print('elbo:', ELBO)
+    # print('elbo:', ELBO)
     loss = -ELBO
     return loss
 
