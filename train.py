@@ -65,8 +65,6 @@ model = VAE()
 if torch.cuda.is_available():
     print("Using the GPU")
     device = torch.device("cuda")
-    # model = model.cuda()
-    # model = model.to(device)
 else:
     print("WARNING: You are about to run on cpu, and this will likely run out \
       of memory. \n You can try setting batch_size=1 to reduce memory usage")
@@ -96,7 +94,7 @@ def loss_fn(x_tilde, x, mu, log_variance):
     D_KL = -0.5 * (1 + log_variance - mu.pow(2) - log_variance.exp()).sum(dim=-1)
     # print('KL Divergence:', D_KL)
     ELBO = (reconstruction_error - D_KL).mean()
-    print('elbo:', ELBO)
+    print('elbo:', ELBO[0])
     loss = -ELBO
     return loss
 
@@ -110,8 +108,6 @@ def train(epoch):
         batch_idx = values[0]
         data = values[1]
         data = data.to(device)
-        # print('DEVICE')
-        # print(data.device)
         optimizer.zero_grad()
         recon_batch, mu, logvar = model(data)
         loss = loss_fn(recon_batch, data, mu, logvar)
@@ -136,8 +132,6 @@ def test(epoch):
             i = values[0]
             data = values[1]
             data = data.to(device)
-            # print(model.device)
-            # print(data.device)
             recon_batch, mu, logvar = model(data)
             test_loss += loss_fn(recon_batch, data, mu, logvar).item()
             if i == 0:

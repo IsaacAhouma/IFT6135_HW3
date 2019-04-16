@@ -3,12 +3,6 @@ import torch.utils.data as data_utils
 import torch
 import os
 import numpy as np
-from torch import nn
-from torch.nn.modules import upsampling
-from torch.functional import F
-from torch.optim import Adam
-import matplotlib
-import matplotlib.pyplot as plt
 
 
 def get_data_loader(dataset_location, batch_size):
