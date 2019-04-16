@@ -91,7 +91,7 @@ def loss_fn(x_tilde, x, mu, log_variance):
     x_tilde = x_tilde.reshape(x_tilde.shape[0], -1)
     reconstruction_error = -F.binary_cross_entropy_with_logits(x_tilde, x, reduction='none').sum(dim=-1)  # E[log p(x|z)]
     # reconstruction_error = (x * torch.log(x_tilde) + (1 - x) * torch.log(1 - x_tilde)).sum(dim=-1)
-    print('reconstruction error:', reconstruction_error)
+    # print('reconstruction error:', reconstruction_error)
     # D_KL = -0.5 * torch.sum(1 + log_variance - mu.pow(2) - log_variance.exp())
     D_KL = -0.5 * (1 + log_variance - mu.pow(2) - log_variance.exp()).sum(dim=-1)
     # print('KL Divergence:', D_KL)
