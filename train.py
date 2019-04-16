@@ -65,7 +65,7 @@ model = VAE()
 if torch.cuda.is_available():
     print("Using the GPU")
     device = torch.device("cuda")
-    model = model.cuda()
+    # model = model.cuda()
     model = model.to(device)
 else:
     print("WARNING: You are about to run on cpu, and this will likely run out \
@@ -74,7 +74,9 @@ else:
 
 train_loader, valid_loader, test_loader = get_data_loader("binarized_mnist", 64)
 
-
+model = model.to(device)
+print("MODEL SENT TO DEVICE")
+print(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 epochs = args.epochs
@@ -132,8 +134,8 @@ def test(epoch):
             i = values[0]
             data = values[1]
             data = data.to(device)
-            print(model.device)
-            print(data.device)
+            # print(model.device)
+            # print(data.device)
             recon_batch, mu, logvar = model(data)
             test_loss += loss_fn(recon_batch, data, mu, logvar).item()
             if i == 0:
