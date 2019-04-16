@@ -110,6 +110,7 @@ def train(epoch):
         batch_idx = values[0]
         data = values[1]
         data = data.to(device)
+        print(data.device)
         optimizer.zero_grad()
         recon_batch, mu, logvar = model(data)
         loss = loss_fn(recon_batch, data, mu, logvar)
