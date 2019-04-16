@@ -1,21 +1,15 @@
 import argparse
-import time
-import collections
 import os
 import sys
 import torch
-from torch.autograd import Variable
-import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
 from mnist_loader import get_data_loader
 from vae import VAE
-from torchvision.utils import save_image
 
 parser = argparse.ArgumentParser(description='VAE')
 parser.add_argument('--lr', type=float, default=0.0003,
                     help='initial learning rate')
-parser.add_argument('--epochs', type=int, default=20,
+parser.add_argument('--epochs', type=int, default=5,
                     help='number of epochs')
 parser.add_argument('--batch_size', type=int, default=64,
                     help='size of one minibatch')
@@ -150,12 +144,14 @@ def valid_elbo(epoch):
     # test_loss /= len(valid_loader.dataset)
     # print('====> Test set loss: {:.4f}'.format(test_loss))
     test_elbo /= num_minibatches
-    print('====> Epoch: {} VALIDATION ELBO: {:.4f}'.format(
-          epoch, test_elbo))
+    print('====> Validation set ELBO: {:.4f}'.format(test_elbo))
 
 
-if __name__ == "__main__":
-    for epoch in range(1, args.epochs + 1):
-        train_elbo(epoch)
-        valid_elbo(epoch)
+for epoch in range(1, args.epochs + 1):
+    train_elbo(epoch)
+    valid_elbo(epoch)
+# if __name__ == "__main__":
+#     for epoch in range(1, args.epochs + 1):
+#         train_elbo(epoch)
+#         valid_elbo(epoch)
 

@@ -3,6 +3,7 @@ import torch.utils.data as data_utils
 import torch
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def get_data_loader(dataset_location, batch_size):
@@ -28,7 +29,6 @@ def get_data_loader(dataset_location, batch_size):
 
 train, valid, test = get_data_loader("binarized_mnist", 64)
 
-# %matplotlib inline
-# for x in train:
-#     plt.imshow(x[0, 0])
-#     break
+for x in train:
+    plt.imshow(x[0, 0])
+    break
