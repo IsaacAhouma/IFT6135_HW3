@@ -196,7 +196,7 @@ def importance_sampling(model, X, Z):
     log_p = log_p_x_given_z + log_p_z - log_q_z_given_x
     log_likelihood = np.log(1 / K) + torch.logsumexp(log_p, dim=1)
 
-    return log_likelihood.mean(dim=0)
+    return log_likelihood
 
 def evaluate_importance_sampling(data_name='valid'):
     model.eval()
@@ -214,6 +214,7 @@ def evaluate_importance_sampling(data_name='valid'):
             data = data.to(device)
             z = generate_z(data)
             x = data.view(data.size(0), -1)
+            print(importance_sampling(model, x, z).item())
             log_likelihood += importance_sampling(model, x, z).item()
 
     log_likelihood /= num_minibatches
