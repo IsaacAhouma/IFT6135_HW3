@@ -151,7 +151,7 @@ def valid_elbo(epoch):
     # print('====> Test set loss: {:.4f}'.format(test_loss))
     test_elbo /= num_minibatches
     print('====> Epoch: {} VALIDATION ELBO: {:.4f}'.format(
-          epoch, test_elbo / num_minibatches))
+          epoch, test_elbo))
 
 
 if __name__ == "__main__":
