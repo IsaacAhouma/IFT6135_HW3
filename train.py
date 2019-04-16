@@ -105,9 +105,10 @@ def loss_fn(x_tilde, x, mu, log_variance):
 ########################
 def train(epoch):
     model.train()
-    train_loss = 0
+    train_elbo = 0
+    num_minibatches = 0
     for values in enumerate(train_loader):
-        # values = values.to(device)
+        num_minibatches += 1
         batch_idx = values[0]
         data = values[1]
         data = data.to(device)
@@ -115,7 +116,7 @@ def train(epoch):
         recon_batch, mu, logvar = model(data)
         loss = loss_fn(recon_batch, data, mu, logvar)
         loss.backward()
-        train_loss += loss.item()
+        train_elbo += -loss.item()
         optimizer.step()
         # if batch_idx % 5 == 0:
         #     print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -123,20 +124,24 @@ def train(epoch):
         #         100. * batch_idx / len(train_loader),
         #         loss.item() / len(data)))
 
-    print('====> Epoch: {} Average loss: {:.4f}'.format(
-          epoch, train_loss / len(train_loader.dataset)))
+    # print('====> Epoch: {} Average loss: {:.4f}'.format(
+    #       epoch, train_loss / len(train_loader.dataset)))
+    print('====> Epoch: {} ELBO: {:.4f}'.format(
+          epoch, train_elbo / num_minibatches))
 
 
 def test(epoch):
     model.eval()
-    test_loss = 0
+    test_elbo = 0
+    num_minibatches = 0
     with torch.no_grad():
         for values in enumerate(valid_loader):
             i = values[0]
+            num_minibatches += 1
             data = values[1]
             data = data.to(device)
             recon_batch, mu, logvar = model(data)
-            test_loss += loss_fn(recon_batch, data, mu, logvar).item()
+            test_elbo += -loss_fn(recon_batch, data, mu, logvar).item()
             # if i == 0:
             #     n = min(data.size(0), 8)
             #     comparison = torch.cat([data[:n],
@@ -144,8 +149,11 @@ def test(epoch):
             #     save_image(comparison.cpu(),
             #              'results/reconstruction_' + str(epoch) + '.png', nrow=n)
 
-    test_loss /= len(valid_loader.dataset)
-    print('====> Test set loss: {:.4f}'.format(test_loss))
+    # test_loss /= len(valid_loader.dataset)
+    # print('====> Test set loss: {:.4f}'.format(test_loss))
+    test_elbo /= num_minibatches
+    print('EPOCH:', epoch)
+    print('====> Test set ELBO: {:.4f}'.format(test_elbo))
 
 if __name__ == "__main__":
     for epoch in range(1, args.epochs + 1):
