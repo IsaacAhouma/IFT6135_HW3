@@ -81,7 +81,7 @@ def get_data_loader(dataset_location, batch_size):
     return splitdata
 
 
-train, valid, test = get_data_loader("binarized_mnist", 64)
+train_loader, valid_loader, test_loader = get_data_loader("binarized_mnist", 64)
 
 #### MODEL ####
 
