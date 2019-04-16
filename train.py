@@ -72,6 +72,7 @@ def get_data_loader(dataset_location, batch_size):
         utils.download_url(URL + filename, dataset_location)
         with open(filepath) as f:
             lines = f.readlines()
+        f.close()
         x = lines_to_np_array(lines).astype('float32')
         x = x.reshape(x.shape[0], 1, 28, 28)
         # pytorch data loader
@@ -96,44 +97,36 @@ else:
       of memory. \n You can try setting batch_size=1 to reduce memory usage")
     device = torch.device("cpu")
 
-# train_loader, valid_loader, test_loader = get_data_loader("binarized_mnist", 64)
-
 model = model.to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 epochs = args.epochs
 
-# see Appendix B from VAE paper:
-# Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
-# https://arxiv.org/abs/1312.6114
-
 if not os.path.isdir('/results'):
     os.mkdir('/results')
 
+# Training ###########
+
 
 def loss_fn(x_tilde, x, mu, log_variance):
+    # see Appendix B from VAE paper:
+    # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
+    # https://arxiv.org/abs/1312.6114
     x = x.reshape(x.shape[0], -1)
     x_tilde = x_tilde.reshape(x_tilde.shape[0], -1)
     reconstruction_error = -F.binary_cross_entropy_with_logits(x_tilde, x, reduction='none').sum(dim=-1)  # E[log p(x|z)]
-    # reconstruction_error = (x * torch.log(x_tilde) + (1 - x) * torch.log(1 - x_tilde)).sum(dim=-1)
-    # print('reconstruction error:', reconstruction_error)
-    # D_KL = -0.5 * torch.sum(1 + log_variance - mu.pow(2) - log_variance.exp())
     D_KL = -0.5 * (1 + log_variance - mu.pow(2) - log_variance.exp()).sum(dim=-1)
-    # print('KL Divergence:', D_KL)
     ELBO = (reconstruction_error - D_KL).mean()
-    # print('elbo:', ELBO)
     loss = -ELBO
     return loss
 
 
-########################
-def train_elbo(epoch):
+def train(epoch):
     model.train()
     train_elbo = 0
     num_minibatches = 0
     for values in enumerate(train_loader):
         num_minibatches += 1
-        batch_idx = values[0]
         data = values[1]
         data = data.to(device)
         optimizer.zero_grad()
@@ -142,45 +135,28 @@ def train_elbo(epoch):
         loss.backward()
         train_elbo += -loss.item()
         optimizer.step()
-        # if batch_idx % 5 == 0:
-        #     print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-        #         epoch, batch_idx * len(data), len(train_loader.dataset),
-        #         100. * batch_idx / len(train_loader),
-        #         loss.item() / len(data)))
 
-    # print('====> Epoch: {} Average loss: {:.4f}'.format(
-    #       epoch, train_loss / len(train_loader.dataset)))
     print('====> Epoch: {} TRAINING ELBO: {:.4f}'.format(
           epoch, train_elbo / num_minibatches))
 
 
-def valid_elbo(epoch):
+def valid():
     model.eval()
-    test_elbo = 0
+    valid_elbo = 0
     num_minibatches = 0
     with torch.no_grad():
         for values in enumerate(valid_loader):
-            i = values[0]
             num_minibatches += 1
             data = values[1]
             data = data.to(device)
             recon_batch, mu, logvar = model(data)
-            test_elbo += -loss_fn(recon_batch, data, mu, logvar).item()
-            # if i == 0:
-            #     n = min(data.size(0), 8)
-            #     comparison = torch.cat([data[:n],
-            #                           recon_batch.view(args.batch_size, 1, 28, 28)[:n]])
-            #     save_image(comparison.cpu(),
-            #              'results/reconstruction_' + str(epoch) + '.png', nrow=n)
+            valid_elbo += -loss_fn(recon_batch, data, mu, logvar).item()
 
-    # test_loss /= len(valid_loader.dataset)
-    # print('====> Test set loss: {:.4f}'.format(test_loss))
-    test_elbo /= num_minibatches
-    print('====> Validation set ELBO: {:.4f}'.format(test_elbo))
+    valid_elbo /= num_minibatches
+    print('====> Validation set ELBO: {:.4f}'.format(valid_elbo))
 
 
 if __name__ == "__main__":
     for epoch in range(1, args.epochs + 1):
-        train_elbo(epoch)
-        valid_elbo(epoch)
-
+        train(epoch)
+        valid()
