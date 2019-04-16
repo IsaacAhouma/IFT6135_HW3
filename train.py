@@ -92,9 +92,10 @@ def loss_fn(x_tilde, x, mu, log_variance):
     # reconstruction_error = F.binary_cross_entropy(x_tilde, x.view(-1, 784), reduction='sum')  # E[log p(x|z)]
     reconstruction_error = (x * torch.log(x_tilde) + (1 - x) * torch.log(1 - x_tilde)).sum(dim=-1)
     print('reconstruction error:', reconstruction_error)
-    D_KL = -0.5 * torch.sum(1 + log_variance - mu.pow(2) - log_variance.exp())
-    print('KL Divergence:', D_KL)
-    ELBO = -(reconstruction_error - D_KL).mean()
+    # D_KL = -0.5 * torch.sum(1 + log_variance - mu.pow(2) - log_variance.exp())
+    D_KL = -0.5 * (1 + log_variance - mu.pow(2) - log_variance.exp()).sum(dim=-1)
+    # print('KL Divergence:', D_KL)
+    ELBO = (reconstruction_error - D_KL).mean()
     print('elbo:', ELBO)
     return ELBO
 
