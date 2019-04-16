@@ -12,7 +12,6 @@ class VAE(nn.Module):
         self.fc_mean = nn.Linear(in_features=256, out_features=self.latent_dim)
         self.fc_log_variance = nn.Linear(in_features=256, out_features=self.latent_dim)
         self.fc_decoder = nn.Linear(in_features=self.latent_dim, out_features=256)
-        self.upsampling = F.interpolate(scale_factor=2, mode='bilinear')
         self.encoding = nn.Sequential(
             nn.Conv2d(1, 32, kernel_size=(3, 3)),
             nn.ELU(),
