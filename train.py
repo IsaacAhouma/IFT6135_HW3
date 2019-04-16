@@ -1,10 +1,13 @@
 import argparse
-import os
 import sys
-import torch
 import torch.nn.functional as F
-from mnist_loader import get_data_loader
+from torchvision.datasets import utils
+import torch.utils.data as data_utils
+import torch
+import os
+import numpy as np
 from vae import VAE
+
 
 parser = argparse.ArgumentParser(description='VAE')
 parser.add_argument('--lr', type=float, default=0.0003,
@@ -53,6 +56,35 @@ with open(os.path.join(experiment_path, 'exp_config.txt'), 'w') as f:
 # Set the random seed manually for reproducibility.
 torch.manual_seed(args.seed)
 
+
+# DATA ####
+
+
+def get_data_loader(dataset_location, batch_size):
+    URL = "http://www.cs.toronto.edu/~larocheh/public/datasets/binarized_mnist/"
+    # start processing
+    def lines_to_np_array(lines):
+        return np.array([[int(i) for i in line.split()] for line in lines])
+    splitdata = []
+    for splitname in ["train", "valid", "test"]:
+        filename = "binarized_mnist_%s.amat" % splitname
+        filepath = os.path.join(dataset_location, filename)
+        utils.download_url(URL + filename, dataset_location)
+        with open(filepath) as f:
+            lines = f.readlines()
+        x = lines_to_np_array(lines).astype('float32')
+        x = x.reshape(x.shape[0], 1, 28, 28)
+        # pytorch data loader
+        dataset = data_utils.TensorDataset(torch.from_numpy(x))
+        dataset_loader = data_utils.DataLoader(x, batch_size=batch_size, shuffle=splitname == "train")
+        splitdata.append(dataset_loader)
+    return splitdata
+
+
+train, valid, test = get_data_loader("binarized_mnist", 64)
+
+#### MODEL ####
+
 model = VAE()
 
 # Use the GPU if you have one
@@ -64,7 +96,7 @@ else:
       of memory. \n You can try setting batch_size=1 to reduce memory usage")
     device = torch.device("cpu")
 
-train_loader, valid_loader, test_loader = get_data_loader("binarized_mnist", 64)
+# train_loader, valid_loader, test_loader = get_data_loader("binarized_mnist", 64)
 
 model = model.to(device)
 
@@ -147,9 +179,9 @@ def valid_elbo(epoch):
     print('====> Validation set ELBO: {:.4f}'.format(test_elbo))
 
 
-# for epoch in range(1, args.epochs + 1):
-#     train_elbo(epoch)
-#     valid_elbo(epoch)
+for epoch in range(1, args.epochs + 1):
+    train_elbo(epoch)
+    valid_elbo(epoch)
 # if __name__ == "__main__":
 #     for epoch in range(1, args.epochs + 1):
 #         train_elbo(epoch)
