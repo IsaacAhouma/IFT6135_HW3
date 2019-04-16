@@ -156,6 +156,15 @@ def valid():
     print('====> Validation set ELBO: {:.4f}'.format(valid_elbo))
 
 
+def importance_sampling(model, X, Z):
+    """
+    :param model: A nn.Module object
+    :param X: an array of shape (M, D)
+    :param Z: a tensor of shape (M, K, L)
+    :return: a vector of length M
+    """
+
+
 if __name__ == "__main__":
     for epoch in range(1, args.epochs + 1):
         train(epoch)
