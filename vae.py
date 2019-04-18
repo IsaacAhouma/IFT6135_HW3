@@ -57,7 +57,6 @@ class VAE(nn.Module):
         x = self.decoding_part2(x)
         x = F.interpolate(x, scale_factor=2, mode='bilinear')
         x = self.decoding_part3(x)
-        # x = nn.Sigmoid()(x)
         return x
 
     def forward(self, x):
