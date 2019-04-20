@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
+
 class VAE(nn.Module):
     def __init__(self, latent_dim=100):
         super(VAE, self).__init__()
@@ -41,6 +42,7 @@ class VAE(nn.Module):
         mean = self.fc_mean(x)
         log_variance = self.fc_log_variance(x)
         return mean, log_variance
+
     def reparameterize(self, mu, log_variance):
         sigma = torch.exp(0.5*log_variance)
         e = torch.randn_like(log_variance)
@@ -56,7 +58,6 @@ class VAE(nn.Module):
         x = self.decoding_part2(x)
         x = F.interpolate(x, scale_factor=2, mode='bilinear')
         x = self.decoding_part3(x)
-        # x = nn.Sigmoid()(x)
         return x
 
     def forward(self, x):
