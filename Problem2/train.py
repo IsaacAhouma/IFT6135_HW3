@@ -7,8 +7,8 @@ import torch
 import os
 import numpy as np
 
-pwd = os.getcwd()
-os.chdir(pwd + '/Problem2')
+# pwd = os.getcwd()
+# os.chdir(pwd + '/Problem2')
 from vae import VAE
 
 
