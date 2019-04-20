@@ -4,6 +4,8 @@ import torch
 import os
 import numpy as np
 
+pwd = os.getcwd()
+os.chdir(pwd + '/Problem2')
 
 def get_data_loader(dataset_location, batch_size):
     URL = "http://www.cs.toronto.edu/~larocheh/public/datasets/binarized_mnist/"

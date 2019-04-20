@@ -6,7 +6,10 @@ import torch.utils.data as data_utils
 import torch
 import os
 import numpy as np
-from Problem2.vae import VAE
+
+pwd = os.getcwd()
+os.chdir(pwd + '/Problem2')
+from vae import VAE
 
 
 parser = argparse.ArgumentParser(description='VAE')
