@@ -1,13 +1,7 @@
 import argparse
-import time
-import collections
 import os
 import sys
 import torch
-from torch.autograd import Variable
-import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
 from mnist_loader import get_data_loader
 from vae import VAE
 from torchvision.utils import save_image
