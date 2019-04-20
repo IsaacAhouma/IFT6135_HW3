@@ -126,24 +126,6 @@ def loss_fn(x_tilde, x, mu, log_variance):
     return loss
 
 
-def train(epoch):
-    model.train()
-    train_elbo = 0
-    num_minibatches = 0
-    for batch_idx, (data, _) in enumerate(train_loader):
-        num_minibatches += 1
-        data = data.to(device)
-        optimizer.zero_grad()
-        recon_batch, mu, logvar = model(data)
-        loss = loss_fn(recon_batch, data, mu, logvar)
-        loss.backward()
-        train_elbo += -loss.item()
-        optimizer.step()
-
-    print('====> Epoch: {} TRAINING ELBO: {:.4f}'.format(
-          epoch, train_elbo / num_minibatches))
-
-
 def evaluate_elbo(data_name='valid'):
     model.eval()
     elbo = 0
@@ -166,6 +148,24 @@ def evaluate_elbo(data_name='valid'):
         print('====> Test set ELBO: {:.4f}'.format(elbo))
     else:
         print('====> Validation set ELBO: {:.4f}'.format(elbo))
+
+
+def train(epoch):
+    model.train()
+    train_elbo = 0
+    num_minibatches = 0
+    for batch_idx, (data, _) in enumerate(train_loader):
+        num_minibatches += 1
+        data = data.to(device)
+        optimizer.zero_grad()
+        recon_batch, mu, logvar = model(data)
+        loss = loss_fn(recon_batch, data, mu, logvar)
+        loss.backward()
+        train_elbo += -loss.item()
+        optimizer.step()
+
+    print('====> Epoch: {} TRAINING ELBO: {:.4f}'.format(
+          epoch, train_elbo / num_minibatches))
 
 
 def importance_sampling(model, X, Z):
@@ -236,7 +236,7 @@ def generate_z(x, k=200, latent_dim=100):
 
 
 if __name__ == "__main__":
-    for epoch in range(1, args.epochs):
+    for epoch in range(1, args.epochs+1):
         train(epoch)
         evaluate_elbo()
 
