@@ -75,12 +75,11 @@ def train_wd(mlp, loss_fn, optimizer, p_iterator, q_iterator, steps):
     return loss.data
 
 
-def plot(x, y, title, save_name):
+def plot(x, y, save_name):
     fig, ax = plt.subplots()
     ax.plot(x, y, color='blue', marker='o', linestyle='dashed', linewidth=2, markersize=12)
 
-    ax.set(xlabel='$\phi$', ylabel='Estimate',
-           title=title)
+    ax.set(xlabel='$\phi$', ylabel='Estimate')
     ax.grid()
 
     fig.savefig(save_name)
@@ -136,10 +135,10 @@ if __name__ == '__main__':
         q_iterator = iter(distribution1(phi, 512))
 
         # Loop and save result
-        loss = train_jsd(mlp, loss_fn, optimizer, p_iterator, q_iterator, 800)
+        loss = train_jsd(mlp, loss_fn, optimizer, p_iterator, q_iterator, 80000)
         jsd_results.append(-loss)
 
-    plot(np.linspace(-1, 1, 21), jsd_results, 'Estimate for Jensen Shannon Divergence', "jsd.png")
+    plot(np.linspace(-1, 1, 21), jsd_results, "jsd.png")
 
     # Code for problem 1.3 Wassertein Distance
     wd_results = []
@@ -153,10 +152,10 @@ if __name__ == '__main__':
         q_iterator = iter(distribution1(phi, 512))
 
         # Loop and save result
-        loss = train_wd(mlp, loss_fn, optimizer, p_iterator, q_iterator, 1000)
+        loss = train_wd(mlp, loss_fn, optimizer, p_iterator, q_iterator, 10000)
         wd_results.append(-loss)
 
-    plot(np.linspace(-1, 1, 21), wd_results, 'Estimate for Wassertein Distance', "wd.png")
+    plot(np.linspace(-1, 1, 21), wd_results, "wd.png")
 
     # Code for problem 1.4
 
