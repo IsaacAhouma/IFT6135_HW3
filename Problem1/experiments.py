@@ -38,8 +38,6 @@ def train_jsd(mlp, loss_fn, optimizer, p_iterator, q_iterator, steps):
             t.set_postfix(loss='{:05.3f}'.format(loss.data))
             t.update()
 
-    print(p_output)
-    print(q_output)
     return loss.data
 
 
@@ -138,7 +136,7 @@ if __name__ == '__main__':
         q_iterator = iter(distribution1(phi, 512))
 
         # Loop and save result
-        loss = train_jsd(mlp, loss_fn, optimizer, p_iterator, q_iterator, 80000)
+        loss = train_jsd(mlp, loss_fn, optimizer, p_iterator, q_iterator, 800)
         jsd_results.append(-loss)
 
     plot(np.linspace(-1, 1, 21), jsd_results, 'Estimate for Jensen Shannon Divergence', "jsd.png")
@@ -155,7 +153,7 @@ if __name__ == '__main__':
         q_iterator = iter(distribution1(phi, 512))
 
         # Loop and save result
-        loss = train_wd(mlp, loss_fn, optimizer, p_iterator, q_iterator, 10000)
+        loss = train_wd(mlp, loss_fn, optimizer, p_iterator, q_iterator, 1000)
         wd_results.append(-loss)
 
     plot(np.linspace(-1, 1, 21), wd_results, 'Estimate for Wassertein Distance', "wd.png")
