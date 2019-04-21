@@ -38,7 +38,7 @@ def train_jsd(mlp, loss_fn, optimizer, p_iterator, q_iterator, steps):
             t.set_postfix(loss='{:05.3f}'.format(loss.data))
             t.update()
 
-    return loss.data
+    return loss.detach().cpu().numpy()
 
 
 def train_wd(mlp, loss_fn, optimizer, p_iterator, q_iterator, steps):
@@ -72,12 +72,12 @@ def train_wd(mlp, loss_fn, optimizer, p_iterator, q_iterator, steps):
             t.set_postfix(loss='{:05.3f}'.format(loss.data))
             t.update()
 
-    return loss.data
+    return loss.detach().cpu().numpy()
 
 
 def plot(x, y, save_name):
     fig, ax = plt.subplots()
-    ax.plot(x, y, color='blue', marker='o', linestyle='dashed', linewidth=2, markersize=12)
+    ax.scatter(x, y, color='blue', marker='o')
 
     ax.set(xlabel='$\phi$', ylabel='Estimate')
     ax.grid()
@@ -135,7 +135,7 @@ if __name__ == '__main__':
         q_iterator = iter(distribution1(phi, 512))
 
         # Loop and save result
-        loss = train_jsd(mlp, loss_fn, optimizer, p_iterator, q_iterator, 80000)
+        loss = train_jsd(mlp, loss_fn, optimizer, p_iterator, q_iterator, 100000)
         jsd_results.append(-loss)
 
     plot(np.linspace(-1, 1, 21), jsd_results, "jsd.png")
